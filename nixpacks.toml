@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["python311"]
+
+[phases.install]
+cmds = ["pip install -r journal_maker/requirements_journal.txt"]
+
+[phases.build]
+cmds = ["cp -r journal_maker/* ."]
+
+[start]
+cmd = "python -m uvicorn journal_app:app --host 0.0.0.0 --port $PORT"
