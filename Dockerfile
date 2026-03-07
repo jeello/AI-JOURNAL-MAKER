@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements_journal.txt
 # Copy application code
 COPY journal_maker/ ./
 
-# Copy templates if needed
+# Copy templates into the app directory
 COPY journal_templates/ ./journal_templates/
 
 # Create data directory

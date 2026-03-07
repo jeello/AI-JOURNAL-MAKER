@@ -145,21 +145,21 @@ async def root(request: Request):
 @app.get("/login", response_class=HTMLResponse)
 async def login_page():
     """Serve login page"""
-    template_path = Path(__file__).parent.parent / "journal_templates" / "login.html"
+    template_path = Path(__file__).parent / "journal_templates" / "login.html"
     with open(template_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page():
     """Serve register page"""
-    template_path = Path(__file__).parent.parent / "journal_templates" / "register.html"
+    template_path = Path(__file__).parent / "journal_templates" / "register.html"
     with open(template_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 @app.get("/static/app.js")
 async def serve_js():
     """Serve the frontend JavaScript"""
-    template_path = Path(__file__).parent.parent / "journal_templates" / "app.js"
+    template_path = Path(__file__).parent / "journal_templates" / "app.js"
     with open(template_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read(), media_type="application/javascript")
 
@@ -350,6 +350,18 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "version": "2.0.0"
+    })
+
+@app.get("/api/debug")
+async def debug_info():
+    """Debug endpoint to check configuration"""
+    return JSONResponse(content={
+        "OPENROUTER_API_KEY": "SET" if os.getenv("OPENROUTER_API_KEY") else "MISSING",
+        "DATABASE_URL": "SET" if os.getenv("DATABASE_URL") else "MISSING",
+        "CLOUDINARY_URL": "SET" if os.getenv("CLOUDINARY_URL") else "MISSING",
+        "PORT": os.getenv("PORT", "8000"),
+        "db_initialized": db is not None,
+        "ai_analyzer_initialized": ai_analyzer is not None,
     })
 
 if __name__ == "__main__":
