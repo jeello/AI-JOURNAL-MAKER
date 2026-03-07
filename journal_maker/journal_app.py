@@ -229,15 +229,17 @@ async def analyze_images(
     session = get_session(request)
     if not session:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     if not images:
         raise HTTPException(status_code=400, detail="No images uploaded")
-    
+
     allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
     max_size = CONFIG.get('ui', {}).get('max_image_size_mb', 10) * 1024 * 1024
-    
+
     image_data = []
     saved_image_urls = []
+
+    print(f"[INFO] Starting analysis of {len(images)} images...", flush=True)
 
     for img in images:
         if img.content_type not in allowed_types:
@@ -257,7 +259,7 @@ async def analyze_images(
             )
             image_url = upload_result['secure_url']
             saved_image_urls.append(image_url)
-            
+
             # Still need base64 for AI analysis
             base64_data = base64.b64encode(content).decode('utf-8')
             image_data.append({
@@ -272,13 +274,15 @@ async def analyze_images(
             with open(img_path, "wb") as f:
                 f.write(content)
             saved_image_urls.append(unique_filename)
-            
+
             base64_data = base64.b64encode(content).decode('utf-8')
             image_data.append({
                 "base64": base64_data,
                 "type": img.content_type,
                 "filename": img.filename
             })
+
+    print(f"[INFO] Images processed, calling AI analyzer...", flush=True)
 
     try:
         result = ai_analyzer.analyze_images(
@@ -289,9 +293,11 @@ async def analyze_images(
             notes=notes
         )
         result['images'] = saved_image_urls
+        print(f"[INFO] Analysis complete!", flush=True)
         return JSONResponse(content=result)
 
     except Exception as e:
+        print(f"[ERROR] Analysis failed: {str(e)}", flush=True)
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @app.get("/api/journals")

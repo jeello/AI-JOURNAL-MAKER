@@ -127,8 +127,12 @@ Write in a thoughtful, engaging tone suitable for a personal journal. Be specifi
             "temperature": self.temperature
         }
 
+        print(f"[INFO] Analyzing {len(images)} images with {self.model}...")
+
         try:
-            with httpx.Client(timeout=60.0) as client:
+            # Increase timeout for multiple images (30s per image)
+            timeout = max(120.0, len(content) * 30.0)
+            with httpx.Client(timeout=timeout) as client:
                 response = client.post(
                     f"{self.base_url}/chat/completions",
                     headers=headers,
@@ -140,9 +144,14 @@ Write in a thoughtful, engaging tone suitable for a personal journal. Be specifi
                     print(f"[ERROR] Response: {response.text}")
                 response.raise_for_status()
                 result = response.json()
+                print(f"[INFO] Analysis complete!")
                 return result['choices'][0]['message']['content']
         except httpx.HTTPError as e:
             error_msg = f"Error analyzing images: {str(e)}"
+            print(f"[ERROR] {error_msg}")
+            return error_msg
+        except Exception as e:
+            error_msg = f"Unexpected error: {str(e)}"
             print(f"[ERROR] {error_msg}")
             return error_msg
     
