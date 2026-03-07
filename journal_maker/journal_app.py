@@ -48,20 +48,35 @@ app.add_middleware(
 
 # Initialize Cloudinary for production image storage
 CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+USE_CLOUD_STORAGE = False
+
 if CLOUDINARY_URL:
-    cloudinary.config(cloud_url=CLOUDINARY_URL)
-    USE_CLOUD_STORAGE = True
+    try:
+        cloudinary.config(cloud_url=CLOUDINARY_URL)
+        USE_CLOUD_STORAGE = True
+    except Exception as e:
+        print(f"Cloudinary init failed: {e}")
+        USE_CLOUD_STORAGE = False
 else:
     # Local storage for development
     DATA_DIR = Path(CONFIG.get('storage', {}).get('data_dir', './journal_data'))
     IMAGES_DIR = Path(CONFIG.get('storage', {}).get('images_dir', './journal_data/images'))
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-    USE_CLOUD_STORAGE = False
 
-# Initialize database and AI analyzer
-db = JournalDatabase()
-ai_analyzer = JournalAIAnalyzer(CONFIG)
+# Initialize database and AI analyzer lazily
+db = None
+ai_analyzer = None
+
+try:
+    db = JournalDatabase()
+except Exception as e:
+    print(f"Database init failed (this is OK for health check): {e}")
+
+try:
+    ai_analyzer = JournalAIAnalyzer(CONFIG)
+except Exception as e:
+    print(f"AI Analyzer init failed: {e}")
 
 # Mount static files for local development
 if not USE_CLOUD_STORAGE:
