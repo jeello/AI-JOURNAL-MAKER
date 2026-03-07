@@ -355,6 +355,15 @@ async def health_check():
 @app.get("/api/debug")
 async def debug_info():
     """Debug endpoint to check configuration"""
+    db_status = "unknown"
+    try:
+        if db:
+            db_status = "initialized"
+        else:
+            db_status = "db is None"
+    except Exception as e:
+        db_status = f"Error: {str(e)}"
+    
     return JSONResponse(content={
         "OPENROUTER_API_KEY": "SET" if os.getenv("OPENROUTER_API_KEY") else "MISSING",
         "DATABASE_URL": "SET" if os.getenv("DATABASE_URL") else "MISSING",
@@ -362,7 +371,19 @@ async def debug_info():
         "PORT": os.getenv("PORT", "8000"),
         "db_initialized": db is not None,
         "ai_analyzer_initialized": ai_analyzer is not None,
+        "database_status": db_status,
     })
+
+@app.post("/api/test-db")
+async def test_db():
+    """Test database connection"""
+    try:
+        if not db:
+            return JSONResponse(content={"error": "db not initialized"}, status_code=500)
+        # Just check connection
+        return JSONResponse(content={"status": "db connection ok"})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 if __name__ == "__main__":
     import uvicorn

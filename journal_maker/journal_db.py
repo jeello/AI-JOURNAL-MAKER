@@ -55,16 +55,20 @@ if DATABASE_URL:
         created_at = Column(DateTime, default=datetime.utcnow)
         
         user = relationship("UserModel", back_populates="journals")
-    
+
     # Create tables
-    Base.metadata.create_all(bind=engine)
-    
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("PostgreSQL tables created successfully")
+    except Exception as e:
+        print(f"Warning: Could not create tables: {e}")
+
     class JournalDatabase:
         """PostgreSQL database manager for production"""
-        
+
         def __init__(self):
-            pass
-        
+            print("JournalDatabase initialized (PostgreSQL mode)")
+
         def _get_db(self):
             return SessionLocal()
         
