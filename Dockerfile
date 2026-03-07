@@ -17,7 +17,9 @@ COPY journal_maker/requirements_journal.txt .
 RUN pip install --no-cache-dir -r requirements_journal.txt
 
 # Copy application code
-COPY journal_maker/ ./journal_maker/
+COPY journal_maker/ ./
+
+# Copy templates if needed
 COPY journal_templates/ ./journal_templates/
 
 # Create data directory
@@ -26,13 +28,14 @@ RUN mkdir -p /app/journal_data/images
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
 
 # Expose port
 EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/api/health')"
+    CMD python -c "import httpx; httpx.get('http://localhost:8000/api/health')" || exit 1
 
 # Run application
-CMD ["sh", "-c", "cd journal_maker && uvicorn journal_app:app --host 0.0.0.0 --port $PORT"]
+CMD ["uvicorn", "journal_app:app", "--host", "0.0.0.0", "--port", "8000"]
