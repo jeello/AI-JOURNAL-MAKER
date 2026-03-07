@@ -135,8 +135,8 @@ async def root(request: Request):
     session = get_session(request)
     if not session:
         return RedirectResponse(url="/login")
-    
-    template_path = Path(__file__).parent.parent / "journal_templates" / "index.html"
+
+    template_path = Path(__file__).parent / "journal_templates" / "index.html"
     with open(template_path, "r", encoding="utf-8") as f:
         content = f.read()
     content = content.replace('</title>', f'</title><script>window.currentUser="{session["username"]}"</script>')
