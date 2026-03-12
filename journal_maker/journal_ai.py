@@ -127,7 +127,9 @@ Write in a thoughtful, engaging tone suitable for a personal journal. Be specifi
             "temperature": self.temperature
         }
 
-        print(f"[INFO] Analyzing {len(images)} images with {self.model}...")
+        # Count images (excluding the text prompt)
+        image_count = len(content) - 1
+        print(f"[INFO] Analyzing {image_count} images with {self.model}...")
 
         try:
             # Increase timeout for multiple images (30s per image)
