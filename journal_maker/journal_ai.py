@@ -113,6 +113,7 @@ Write in a thoughtful, engaging tone suitable for a personal journal. Be specifi
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "http://localhost:8000",
+            "X-Title": "AI Journal Maker"
         }
 
         payload = {
@@ -129,7 +130,9 @@ Write in a thoughtful, engaging tone suitable for a personal journal. Be specifi
 
         # Count images (excluding the text prompt)
         image_count = len(content) - 1
-        print(f"[INFO] Analyzing {image_count} images with {self.model}...")
+        print(f"[INFO] Analyzing {image_count} images with {self.model}...", flush=True)
+        print(f"[INFO] Using base_url: {self.base_url}", flush=True)
+        print(f"[INFO] API key present: {'Yes' if self.api_key else 'No'}", flush=True)
 
         try:
             # Increase timeout for multiple images (30s per image)
@@ -141,20 +144,27 @@ Write in a thoughtful, engaging tone suitable for a personal journal. Be specifi
                     json=payload
                 )
                 # Print full error for debugging
+                print(f"[INFO] Response status: {response.status_code}", flush=True)
                 if response.status_code != 200:
-                    print(f"[ERROR] Status: {response.status_code}")
-                    print(f"[ERROR] Response: {response.text}")
+                    print(f"[ERROR] Response body: {response.text}", flush=True)
+                    
+                    # Check for authentication error
+                    if response.status_code == 401:
+                        return "ERROR: Invalid or missing API key. Please check your OPENROUTER_API_KEY environment variable."
+                    elif response.status_code == 404:
+                        return f"ERROR: Model '{self.model}' not found. Please check the model name in journal_config.json."
+                    
                 response.raise_for_status()
                 result = response.json()
-                print(f"[INFO] Analysis complete!")
+                print(f"[INFO] Analysis complete!", flush=True)
                 return result['choices'][0]['message']['content']
         except httpx.HTTPError as e:
             error_msg = f"Error analyzing images: {str(e)}"
-            print(f"[ERROR] {error_msg}")
+            print(f"[ERROR] {error_msg}", flush=True)
             return error_msg
         except Exception as e:
             error_msg = f"Unexpected error: {str(e)}"
-            print(f"[ERROR] {error_msg}")
+            print(f"[ERROR] {error_msg}", flush=True)
             return error_msg
     
     def _call_anthropic_api(self, prompt: str, images: List[Dict[str, str]]) -> str:
